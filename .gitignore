@@ -117,3 +117,7 @@ packages/i18n/src/types/keys.generated.ts
 
 # Local security notes (not for version control)
 /security/
+
+# Local codebase-familiarity map (regenerable; per devops-process/skills/codebase-familiarity).
+# CONTEXT.md (the WHY counterpart) IS committed (untracked here only because we don't push to upstream).
+.codebase-map.md
