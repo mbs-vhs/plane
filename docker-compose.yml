@@ -159,12 +159,14 @@ services:
       dockerfile: Dockerfile.ce
     restart: always
     ports:
-      - "${LISTEN_BIND_IP:-0.0.0.0}:${LISTEN_HTTP_PORT}:80"
+      # Fail-closed bind: Tailscale-only posture per CONTEXT.md; operator sets LISTEN_BIND_IP=<tailscale-ip> in .env.
+      - "${LISTEN_BIND_IP:-127.0.0.1}:${LISTEN_HTTP_PORT}:80"
     environment:
       SITE_ADDRESS: ":80"
       FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
       BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
-      TRUSTED_PROXIES: 0.0.0.0/0
+      # No upstream proxy in this topology; loopback-only fail-closed default. Operator can override via .env if a real upstream is added.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1/32}
     depends_on:
       - web
       - api
