@@ -136,7 +136,7 @@ function updateEnvFile() {
         else 
             if [ "$OS_NAME" == "Darwin" ]; then
                 value=$(echo "$value" | sed 's/|/\\|/g')
-                sed -i '' "s|^$key=.*|$key=$value|g" "$file"
+                sed -i "s|^$key=.*|$key=$value|g" "$file"
             else
                 sed -i "s/^$key=.*/$key=$value/g" "$file"
             fi

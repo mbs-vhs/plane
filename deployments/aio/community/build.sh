@@ -59,7 +59,7 @@ string_replace(){
     local replace="$3"
     
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|$search|$replace|g" "$file"
+        sed -i "s|$search|$replace|g" "$file"
     else
         sed -i "s|$search|$replace|g" "$file"
     fi
@@ -69,7 +69,7 @@ remove_line(){
     local line="$2"
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' '/'$line'/d' "$file"
+        sed -i '/'$line'/d' "$file"
     else
         sed -i '/'$line'/d' "$file"
     fi
@@ -82,7 +82,7 @@ update_env_file(){
 
     # if key is in file, replace it
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' 's|^'$key'=.*|'$key'='$value'|' "$file"
+        sed -i 's|^'$key'=.*|'$key'='$value'|' "$file"
     else
         sed -i 's|^'$key'=.*|'$key'='$value'|' "$file"
     fi
