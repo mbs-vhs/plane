@@ -126,12 +126,13 @@ services:
 
   plane-mq:
     container_name: plane-mq
-    # Bumped 2026-06-03 (version audit): 3.13.7 = FINAL 3.13.x build (line is
-    # community-EOL since 2024-09). The 4.x migration is a separate planned
-    # card — prereqs: enable all 3.13 stable feature flags, migrate any classic
-    # mirrored queues to quorum, and NEVER enable khepri_db on 3.13 (blocks
-    # in-place 4.x upgrade).
-    image: rabbitmq:3.13.7-management-alpine
+    # 2026-06-03 (CLAWD-1095): 3.13.6 → 3.13.7 (final EOL-line build) → 4.3.1
+    # same night. 4.x preflight verified: all stable feature flags enabled,
+    # khepri_db disabled (Mnesia default retained), zero policies (no classic
+    # mirroring), plain classic celery queues. Volume backed up pre-jump
+    # (~/.local/share/backups/plane-rabbitmq-pre-4.x-*). In-place 4.x→3.13
+    # downgrade is NOT possible — rollback = restore volume + old tag.
+    image: rabbitmq:4.3.1-management-alpine
     restart: always
     env_file:
       - .env
@@ -141,6 +142,9 @@ services:
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      # 4.x denies celery's transient pidbox/event queue declarations by
+      # default — this permit keeps Plane workers functional (see file).
+      - ./rabbitmq/20-permit-transient.conf:/etc/rabbitmq/conf.d/20-permit-transient.conf:ro
     networks:
       - clawd
 
