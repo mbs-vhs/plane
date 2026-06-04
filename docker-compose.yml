@@ -126,7 +126,12 @@ services:
 
   plane-mq:
     container_name: plane-mq
-    image: rabbitmq:3.13.6-management-alpine
+    # Bumped 2026-06-03 (version audit): 3.13.7 = FINAL 3.13.x build (line is
+    # community-EOL since 2024-09). The 4.x migration is a separate planned
+    # card — prereqs: enable all 3.13 stable feature flags, migrate any classic
+    # mirrored queues to quorum, and NEVER enable khepri_db on 3.13 (blocks
+    # in-place 4.x upgrade).
+    image: rabbitmq:3.13.7-management-alpine
     restart: always
     env_file:
       - .env
@@ -141,7 +146,14 @@ services:
 
   plane-minio:
     container_name: plane-minio
-    image: minio/minio
+    # Pinned 2026-06-03 (version audit): bare `minio/minio` = floating :latest.
+    # Docker Hub's terminal community tag IS this 2025-09-07 build (the
+    # 2025-10-15 final release with the GHSA-jjjj-jwhf-8rgr service-account/STS
+    # privesc fix was never published as an image — upstream archived 2026-04).
+    # Exploitability here ≈ nil: loopback/compose-network only, single root
+    # credential, no STS/service accounts. Replacement (MinIO→Garage) is a
+    # planned card; do NOT expect further upstream patches.
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: always
     command: server /export --console-address ":9090"
     volumes:
