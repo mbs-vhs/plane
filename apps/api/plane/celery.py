@@ -103,6 +103,15 @@ def setup_loggers(logger, *args, **kwargs):
     handler.setFormatter(fmt=formatter)
     logger.addHandler(handler)
 
+    # Defense in depth (CLAWD-1253): the "Task <name>[<id>] received" INFO line
+    # emitted by celery.worker.strategy includes the task's args/kwargs. Some
+    # tasks (e.g. plane.bgtasks.logger_task.process_logs from
+    # APITokenLogMiddleware) carry the raw X-Api-Key in their kwargs, so that
+    # line leaks the credential to stdout on every external API request. Raise
+    # this one logger to WARNING so the received-line (and its kwargs dump) is
+    # suppressed while all other worker logging stays at the configured level.
+    logging.getLogger("celery.worker.strategy").setLevel(logging.WARNING)
+
 
 @after_setup_task_logger.connect
 def setup_task_loggers(logger, *args, **kwargs):
