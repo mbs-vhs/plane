@@ -328,6 +328,11 @@ CELERY_IMPORTS = (
     # issue version tasks
     "plane.bgtasks.issue_version_sync",
     "plane.bgtasks.issue_description_version_sync",
+    # API request audit logging — APITokenLogMiddleware enqueues this task on
+    # every external X-Api-Key request. Without this import the worker rejects it
+    # as an "unregistered task" and dumps the full message body (which contains
+    # the X-Api-Key) to stderr (CLAWD-1253).
+    "plane.bgtasks.logger_task",
 )
 
 FILE_SIZE_LIMIT = int(os.environ.get("FILE_SIZE_LIMIT", 5242880))
