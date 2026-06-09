@@ -11,11 +11,23 @@
 	
 	reverse_proxy /live/* live:3000
 
-	reverse_proxy /api/* api:8000
+	# CLAWD-1096: forward the ORIGINAL X-Forwarded-Proto to the API (the host
+	# Caddy terminates TLS for plane.vhs.box and sets it to https; direct
+	# http://IP:3000 sends none → stays http). Plane's production settings honor
+	# SECURE_PROXY_SSL_HEADER, so this makes request.scheme match the browser →
+	# presigned upload/serve URLs use the right scheme (fixes the https
+	# mixed-content upload block) and works on BOTH access paths.
+	reverse_proxy /api/* api:8000 {
+		header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+	}
 
-	reverse_proxy /auth/* api:8000
+	reverse_proxy /auth/* api:8000 {
+		header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+	}
 
-	reverse_proxy /static/* api:8000
+	reverse_proxy /static/* api:8000 {
+		header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+	}
 
 	reverse_proxy /{$BUCKET_NAME}/* plane-minio:9000
 	reverse_proxy /{$BUCKET_NAME} plane-minio:9000
