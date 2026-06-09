@@ -29,8 +29,12 @@
 		header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
 	}
 
-	reverse_proxy /{$BUCKET_NAME}/* plane-minio:9000
-	reverse_proxy /{$BUCKET_NAME} plane-minio:9000
+	# CLAWD-1096: object store = clawd-garage (MinIO CE is EOL). Host is
+	# PRESERVED (NO header_up) — Plane presigns GET URLs for request.get_host()
+	# (= plane.vhs.box), and Garage validates SigV4 strictly against the Host it
+	# receives, so the proxy must pass the original Host through, not rewrite it.
+	reverse_proxy /{$BUCKET_NAME}/* clawd-garage:3900
+	reverse_proxy /{$BUCKET_NAME} clawd-garage:3900
 
 	reverse_proxy /* web:3000
 }
