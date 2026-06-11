@@ -130,7 +130,12 @@ MIDDLEWARE = [
     "crum.CurrentRequestUserMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "plane.middleware.request_body_size.RequestBodySizeLimitMiddleware",
-    "plane.middleware.logger.APITokenLogMiddleware",
+    # CLAWD-1258: APITokenLogMiddleware persisted the raw X-Api-Key (token_identifier)
+    # AND the full request headers (incl the key) into the api_activity_logs table on
+    # every external-API request — a standing credential dump. Disabled (minimal
+    # vendored delta). Trade-off: external-API audit logging is off (capability
+    # reduction). Re-enable only with the token/headers redacted at the source.
+    # "plane.middleware.logger.APITokenLogMiddleware",
     "plane.middleware.logger.RequestLoggerMiddleware",
 ]
 
