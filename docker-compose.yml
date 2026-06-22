@@ -132,7 +132,12 @@ services:
     # mirroring), plain classic celery queues. Volume backed up pre-jump
     # (~/.local/share/backups/plane-rabbitmq-pre-4.x-*). In-place 4.x→3.13
     # downgrade is NOT possible — rollback = restore volume + old tag.
-    image: rabbitmq:4.3.1-management-alpine
+    # 2026-06-22 stack-audit (CLAWD-1787): 4.3.1 -> 4.3.2 patch. Stays in 4.3.x —
+    # NO Khepri/metadata-store door crossed; the transient_nonexcl_queues permit
+    # (below) is unchanged + still required. Mgmt-plugin CORS/error-leak hardening,
+    # no CVE. Vol + defs backed up: plane-rabbitmq-vol-pre-4.3.2-*, -defs-pre-4.3.2-*.
+    # Rollback: restore volume + tag 4.3.1.
+    image: rabbitmq:4.3.2-management-alpine
     restart: always
     env_file:
       - .env
