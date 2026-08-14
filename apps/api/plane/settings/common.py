@@ -130,12 +130,20 @@ MIDDLEWARE = [
     "crum.CurrentRequestUserMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "plane.middleware.request_body_size.RequestBodySizeLimitMiddleware",
-    # CLAWD-1258: APITokenLogMiddleware persisted the raw X-Api-Key (token_identifier)
-    # AND the full request headers (incl the key) into the api_activity_logs table on
-    # every external-API request — a standing credential dump. Disabled (minimal
-    # vendored delta). Trade-off: external-API audit logging is off (capability
-    # reduction). Re-enable only with the token/headers redacted at the source.
-    # "plane.middleware.logger.APITokenLogMiddleware",
+    # CLAWD-1258 (disabled 2026-06) / CLAWD-3873 (RE-ENABLED 2026-08-14 on v1.4.1).
+    # It was disabled because it persisted the raw X-Api-Key and the full request
+    # headers into api_activity_logs on every external-API request. Its own condition
+    # for re-enabling was "the token/headers redacted at the source".
+    # Measured at v1.4.1 in apps/api/plane/middleware/logger.py:
+    #   :117 SENSITIVE_HEADERS = frozenset({"x-api-key","authorization","cookie"})
+    #   :125 substitutes "[REDACTED]" for those values before persisting
+    #   :144 token_identifier = hmac.new(...)  — non-reversible, not the key
+    # Verified on the RUNNING instance, not from the upstream diff — see CLAWD-3873.
+    # NOTE the sibling patch below (CELERY_IMPORTS "plane.bgtasks.logger_task") is
+    # REQUIRED, not redundant: measured, upstream v1.4.1 registers 8 bgtasks and
+    # logger_task is NOT among them, so removing it returns the worker to rejecting
+    # this task as unregistered and dumping the message body (CLAWD-1253).
+    "plane.middleware.logger.APITokenLogMiddleware",
     "plane.middleware.logger.RequestLoggerMiddleware",
 ]
 
