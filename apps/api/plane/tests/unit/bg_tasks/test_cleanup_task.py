@@ -18,6 +18,7 @@ from django.utils import timezone
 from uuid import uuid4
 
 from plane.bgtasks.cleanup_task import (
+    BATCH_SIZE,
     delete_api_logs,
     delete_email_notification_logs,
     delete_webhook_logs,
@@ -81,6 +82,15 @@ class TestDeleteApiLogs:
 
         assert APIActivityLog.all_objects.filter(pk=recent.pk).exists()
 
+    def test_cleanup_is_idempotent(self):
+        retention_days = settings.API_ACTIVITY_LOG_RETENTION_DAYS
+        expired = _make_api_log(timezone.now() - timedelta(days=retention_days + 1))
+
+        delete_api_logs()
+        delete_api_logs()
+
+        assert not APIActivityLog.all_objects.filter(pk=expired.pk).exists()
+
 
 @pytest.mark.unit
 @pytest.mark.django_db
@@ -128,6 +138,34 @@ class TestDeleteEmailLogs:
 
 @pytest.mark.unit
 class TestProcessCleanupTaskErrorHandling:
+    def test_deletes_in_bounded_batches(self):
+        batch_sizes = []
+
+        class _RecordingQuerySet:
+            def __init__(self, ids):
+                self.ids = ids
+
+            def delete(self):
+                batch_sizes.append(len(self.ids))
+                return len(self.ids), {}
+
+        class _RecordingManager:
+            @staticmethod
+            def filter(**kwargs):
+                return _RecordingQuerySet(kwargs["id__in"])
+
+        class _RecordingModel:
+            all_objects = _RecordingManager()
+
+        process_cleanup_task(
+            lambda: iter(range(BATCH_SIZE * 2 + 1)),
+            _RecordingModel,
+            "Bounded",
+        )
+
+        assert BATCH_SIZE == 500
+        assert batch_sizes == [500, 500, 1]
+
     def test_batch_delete_failure_is_swallowed(self):
         """A failing batch is logged and skipped; the run does not raise."""
 

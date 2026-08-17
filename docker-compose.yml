@@ -3,6 +3,9 @@
 # - Kept bundled: plane-mq (RabbitMQ — no shared one to reuse)
 # - Network: external `clawd` (joins clawd-postgres/clawd-redis directly by service name)
 
+x-api-activity-retention: &api-activity-retention
+  API_ACTIVITY_LOG_RETENTION_DAYS: "1"
+
 services:
   web:
     container_name: web
@@ -56,6 +59,7 @@ services:
     command: ./bin/docker-entrypoint-api.sh
     env_file:
       - ./apps/api/.env
+    environment: *api-activity-retention
     depends_on:
       - plane-mq
     networks:
@@ -72,6 +76,7 @@ services:
     command: ./bin/docker-entrypoint-worker.sh
     env_file:
       - ./apps/api/.env
+    environment: *api-activity-retention
     depends_on:
       - api
       - plane-mq
@@ -89,6 +94,7 @@ services:
     command: ./bin/docker-entrypoint-beat.sh
     env_file:
       - ./apps/api/.env
+    environment: *api-activity-retention
     depends_on:
       - api
       - plane-mq
