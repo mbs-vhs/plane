@@ -143,7 +143,14 @@ services:
     # (below) is unchanged + still required. Mgmt-plugin CORS/error-leak hardening,
     # no CVE. Vol + defs backed up: plane-rabbitmq-vol-pre-4.3.2-*, -defs-pre-4.3.2-*.
     # Rollback: restore volume + tag 4.3.1.
-    image: rabbitmq:4.3.2-management-alpine
+    # 2026-09-06 stack-audit (CLAWD-4172): 4.3.2 -> 4.3.5 (image 2026-09-03). Core fixes in the gap:
+    # CVE-2026-67419 (High), GHSA-3526 management admin RCE, GHSA-6chv, GHSA-6588, CVE-2026-67416/-67414
+    # (amqp10_common, 4.3.4), CVE-2026-67241 (4.3.3), CVE-2026-67421 (mgmt). ~20 further advisories need oauth2/stream/shovel/federation/
+    # mqtt/stomp/ldap plugins, none of which are enabled here. OTP 27.3.4.17 bundled (min 27.0).
+    # khepri_db enabled is EXPECTED on 4.x; the transient_nonexcl_queues permit conf stays load-bearing.
+    # Backup: ~/.local/share/backups/plane-mq-defs-pre-4.3.5-*.json + plane_rabbitmq_data-pre-4.3.5-*.tar.gz.
+    # Rollback within 4.3.x: tag 4.3.2 + docker compose up -d plane-mq. 4.3 EOL 2026-11-30 -> plan 4.4.
+    image: rabbitmq:4.3.5-management-alpine
     restart: always
     env_file:
       - .env
